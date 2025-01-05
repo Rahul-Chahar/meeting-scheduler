@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Meeting Scheduler</title>
+    <style>
+        .slot {
+            margin: 10px;
+            padding: 10px;
+            border: 1px solid #ccc;
+            background-color: #f9f9f9;
+        }
+        .booking-form {
+            display: none;
+            margin: 20px;
+            padding: 20px;
+            border: 1px solid #ddd;
+            background-color: #fff;
+        }
+        .booking-details {
+            margin: 20px;
+            padding: 20px;
+            border: 1px solid #ddd;
+            background-color: #e8f5e9;
+        }
+        #bookings-container {
+            margin-top: 20px;
+        }
+        input {
+            margin: 10px 0;
+            padding: 5px;
+            width: 200px;
+        }
+        button {
+            margin: 10px 0;
+            padding: 5px 10px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+    </style>
+</head>
+<body>
+    <h1>Meeting Scheduler</h1>
+    
+    <div id="slots-container"></div>
+    
+    <div id="booking-form" class="booking-form">
+        <h3>Book Slot</h3>
+        <input type="text" id="name" placeholder="Name" required><br>
+        <input type="email" id="email" placeholder="Email" required><br>
+        <button onclick="bookSlot()">Book</button>
+    </div>
+
+    <script src="/js/main.js"></script>
+</body>
+</html>
