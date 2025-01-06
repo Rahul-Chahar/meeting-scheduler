@@ -12,53 +12,48 @@ class SchedulerController {
         }
     }
 
-    static async getCurrentBooking(req, res) {
+    static async getAllBookings(req, res) {
         try {
-            const { email } = req.params;
-            const booking = await Booking.getCurrentBooking(email);
-            res.json(booking || null);
+            const bookings = await Booking.getAllBookings();
+            res.json(bookings);
         } catch (error) {
-            res.status(500).json({ message: 'Error fetching booking' });
+            console.error('Error fetching bookings:', error);
+            res.status(500).json({ message: 'Error fetching bookings' });
         }
     }
+
 
     static async bookSlot(req, res) {
-        const { slotId, name, email } = req.body;
-        const connection = await db.getConnection();
+    const { slotId, name, email } = req.body;
+    const connection = await db.getConnection();
 
-        try {
-            await connection.beginTransaction();
+    try {
+        await connection.beginTransaction();
 
-            // Check if user already has a booking
-            const existingBooking = await Booking.getCurrentBooking(email);
-            if (existingBooking) {
-                await connection.rollback();
-                return res.status(400).json({ message: 'You already have a booking' });
-            }
-
-            const slot = await Slot.checkAvailability(slotId);
-            if (!slot) {
-                await connection.rollback();
-                return res.status(400).json({ message: 'No slots available' });
-            }
-
-            const bookingId = await Booking.create(slotId, name, email);
-            await Slot.updateAvailability(slotId, false);
-
-            await connection.commit();
-            res.json({ 
-                message: `Slot is confirmed ${name}. Please join at ${slot.time_slot}`,
-                time: slot.time_slot,
-                bookingId: bookingId
-            });
-        } catch (error) {
+        // Check slot availability
+        const slot = await Slot.checkAvailability(slotId);
+        if (!slot) {
             await connection.rollback();
-            res.status(500).json({ message: 'Booking failed' });
-        } finally {
-            connection.release();
+            return res.status(400).json({ message: 'No slots available' });
         }
-    }
 
+        const bookingId = await Booking.create(slotId, name, email);
+        await Slot.updateAvailability(slotId, false);
+
+        await connection.commit();
+        res.json({ 
+            message: `Slot is confirmed ${name}. Please join at ${slot.time_slot}`,
+            time: slot.time_slot,
+            bookingId: bookingId,
+            success: true
+        });
+    } catch (error) {
+        await connection.rollback();
+        res.status(500).json({ message: 'Booking failed' });
+    } finally {
+        connection.release();
+    }
+}
     static async cancelBooking(req, res) {
         const { bookingId } = req.body;
         const connection = await db.getConnection();

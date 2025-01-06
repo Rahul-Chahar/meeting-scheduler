@@ -1,6 +1,25 @@
 const db = require('../config/database');
 
 class Booking {
+    static async getAllBookings() {
+        try {
+            const [rows] = await db.query(`
+                SELECT 
+                    bookings.id,
+                    bookings.name,
+                    bookings.email,
+                    bookings.slot_id,
+                    slots.time_slot
+                FROM bookings
+                JOIN slots ON bookings.slot_id = slots.id
+                ORDER BY slots.time_slot ASC
+            `);
+            return rows;
+        } catch (error) {
+            throw error;
+        }
+    }
+
     static async create(slotId, name, email) {
         try {
             const [result] = await db.query(
@@ -13,20 +32,6 @@ class Booking {
         }
     }
 
-    static async getCurrentBooking(email) {
-        try {
-            const [rows] = await db.query(
-                `SELECT bookings.*, slots.time_slot 
-                FROM bookings 
-                JOIN slots ON bookings.slot_id = slots.id 
-                WHERE bookings.email = ?`,
-                [email]
-            );
-            return rows[0];
-        } catch (error) {
-            throw error;
-        }
-    }
 
     static async delete(bookingId) {
         try {
