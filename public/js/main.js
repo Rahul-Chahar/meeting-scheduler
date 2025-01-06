@@ -2,66 +2,27 @@ let selectedSlotId = null;
 
 async function loadAllBookings() {
     try {
-        const response = await fetch('/api/bookings');
-        const bookings = await response.json();
-        
-        // Create bookings container if it doesn't exist
-        let bookingsContainer = document.getElementById('bookings-container');
-        if (!bookingsContainer) {
-            bookingsContainer = document.createElement('div');
-            bookingsContainer.id = 'bookings-container';
-            document.body.insertBefore(bookingsContainer, document.getElementById('booking-form'));
-        }
-        
-        // Clear existing bookings
-        bookingsContainer.innerHTML = '<h2>Current Bookings</h2>';
-        
-        // Display all bookings
-        if (Array.isArray(bookings) && bookings.length > 0) {
-            bookings.forEach(booking => {
-                showBookingDetails(booking);
-            });
-        }
+        const bookings = await fetchData('/api/bookings');
+        const bookingsContainer = ensureContainer('bookings-container', 'Current Bookings');
+
+        bookingsContainer.innerHTML = ''; // Clear existing bookings
+        bookings.forEach(booking => {
+            bookingsContainer.appendChild(createBookingElement(booking));
+        });
     } catch (error) {
         console.error('Error loading bookings:', error);
     }
 }
 
-function showBookingDetails(booking) {
-    const bookingsContainer = document.getElementById('bookings-container');
-    
-    const bookingElement = document.createElement('div');
-    bookingElement.className = 'booking-details';
-    bookingElement.id = `booking-${booking.id}`;
-    bookingElement.innerHTML = `
-        <h3>Booking Details</h3>
-        <p>Name: ${booking.name}</p>
-        <p>Email: ${booking.email}</p>
-        <p>Time: ${formatTime(booking.time_slot)}</p>
-        <button onclick="cancelBooking(${booking.id})" class="cancel-btn">Cancel Booking</button>
-    `;
-    
-    bookingsContainer.appendChild(bookingElement);
-}
-
 async function loadSlots() {
     try {
-        const response = await fetch('/api/slots');
-        const slots = await response.json();
-        
-        const container = document.getElementById('slots-container');
-        container.innerHTML = '<h2>Available Slots</h2>';
-        
+        const slots = await fetchData('/api/slots');
+        const slotsContainer = ensureContainer('slots-container', 'Available Slots');
+
+        slotsContainer.innerHTML = ''; // Clear existing slots
         slots.forEach(slot => {
             if (slot.available_slots > 0) {
-                const slotDiv = document.createElement('div');
-                slotDiv.className = 'slot';
-                slotDiv.innerHTML = `
-                    ${formatTime(slot.time_slot)}<br>
-                    Available Slots: ${slot.available_slots}
-                    <button onclick="selectSlot(${slot.id}, '${slot.time_slot}')">Select</button>
-                `;
-                container.appendChild(slotDiv);
+                slotsContainer.appendChild(createSlotElement(slot));
             }
         });
     } catch (error) {
@@ -69,8 +30,41 @@ async function loadSlots() {
     }
 }
 
+function ensureContainer(id, title) {
+    let container = document.getElementById(id);
+    if (!container) {
+        container = document.createElement('div');
+        container.id = id;
+        container.innerHTML = `<h2>${title}</h2>`;
+        document.body.appendChild(container);
+    }
+    return container;
+}
+
+function createBookingElement(booking) {
+    const bookingElement = document.createElement('div');
+    bookingElement.className = 'booking-details';
+    bookingElement.innerHTML = `
+        <p>Name: ${booking.name}</p>
+        <p>Email: ${booking.email}</p>
+        <p>Time: ${formatTime(booking.time_slot)}</p>
+        <button onclick="cancelBooking(${booking.id})">Cancel</button>
+    `;
+    return bookingElement;
+}
+
+function createSlotElement(slot) {
+    const slotElement = document.createElement('div');
+    slotElement.className = 'slot';
+    slotElement.innerHTML = `
+        <p>${formatTime(slot.time_slot)}</p>
+        <p>Available Slot: ${slot.available_slots}</p>
+        <button onclick="selectSlot(${slot.id})">Select</button>
+    `;
+    return slotElement;
+}
+
 function formatTime(time) {
-    if (!time) return '';
     const [hours, minutes] = time.split(':');
     const ampm = hours >= 12 ? 'PM' : 'AM';
     const formattedHours = hours % 12 || 12;
@@ -79,8 +73,7 @@ function formatTime(time) {
 
 function selectSlot(slotId) {
     selectedSlotId = slotId;
-    const form = document.getElementById('booking-form');
-    form.style.display = 'block';
+    document.getElementById('booking-form').style.display = 'block';
     clearForm();
 }
 
@@ -90,72 +83,53 @@ function clearForm() {
 }
 
 async function bookSlot() {
+    const name = document.getElementById('name').value;
+    const email = document.getElementById('email').value;
+
+    if (!name || !email) {
+        return alert('Please fill in all fields');
+    }
+
     try {
-        const name = document.getElementById('name').value;
-        const email = document.getElementById('email').value;
-
-        if (!name || !email) {
-            alert('Please fill in all fields');
-            return;
-        }
-
-        const response = await fetch('/api/book', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ 
-                slotId: selectedSlotId, 
-                name, 
-                email 
-            })
-        });
-
-        const result = await response.json();
-
-        if (response.ok) {
-            // Reload all data
-            await loadAllBookings();
-            await loadSlots();
-            
-            // Hide the booking form
-            document.getElementById('booking-form').style.display = 'none';
-            alert(result.message);
-        } else {
-            alert(result.message || 'Booking failed');
-        }
+        const result = await postData('/api/book', { slotId: selectedSlotId, name, email });
+        alert(result.message);
+        await refreshData();
     } catch (error) {
         console.error('Error booking slot:', error);
-        alert('Error booking slot');
+        alert('Booking failed');
     }
 }
 
 async function cancelBooking(bookingId) {
     try {
-        const response = await fetch('/api/cancel', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ bookingId })
-        });
-
-        const result = await response.json();
-
-        if (response.ok) {
-            // Reload all data
-            await loadAllBookings();
-            await loadSlots();
-            alert(result.message);
-        } else {
-            alert(result.message || 'Cancellation failed');
-        }
+        const result = await postData('/api/cancel', { bookingId });
+        alert(result.message);
+        await refreshData();
     } catch (error) {
         console.error('Error cancelling booking:', error);
-        alert('Error cancelling booking');
+        alert('Cancellation failed');
     }
 }
 
-// Initialize the page
-window.onload = async function() {
-    await Promise.all([
-        loadAllBookings(),
-        loadSlots()
-    ]);
+async function fetchData(url) {
+    const response = await fetch(url);
+    if (!response.ok) throw new Error('Failed to fetch data');
+    return await response.json();
 }
+
+async function postData(url, data) {
+    const response = await fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data)
+    });
+    if (!response.ok) throw new Error('Failed to post data');
+    return await response.json();
+}
+
+async function refreshData() {
+    await Promise.all([loadAllBookings(), loadSlots()]);
+    document.getElementById('booking-form').style.display = 'none';
+}
+
+window.onload = refreshData;
