@@ -20,9 +20,13 @@ async function loadSlots() {
         const slotsContainer = ensureContainer('slots-container', 'Available Slots');
 
         slotsContainer.innerHTML = ''; // Clear existing slots
+        const gridContainer = document.createElement('div');
+        gridContainer.className = 'grid';
+        slotsContainer.appendChild(gridContainer);
+
         slots.forEach(slot => {
             if (slot.available_slots > 0) {
-                slotsContainer.appendChild(createSlotElement(slot));
+                gridContainer.appendChild(createSlotElement(slot));
             }
         });
     } catch (error) {
@@ -35,8 +39,8 @@ function ensureContainer(id, title) {
     if (!container) {
         container = document.createElement('div');
         container.id = id;
-        container.innerHTML = `<h2>${title}</h2>`;
-        document.body.appendChild(container);
+        container.innerHTML = `<h2 class="section-title">${title}</h2>`;
+        document.querySelector('.container').appendChild(container);
     }
     return container;
 }
@@ -45,10 +49,11 @@ function createBookingElement(booking) {
     const bookingElement = document.createElement('div');
     bookingElement.className = 'booking-details';
     bookingElement.innerHTML = `
-        <p>Name: ${booking.name}</p>
-        <p>Email: ${booking.email}</p>
-        <p>Time: ${formatTime(booking.time_slot)}</p>
-        <button onclick="cancelBooking(${booking.id})">Cancel</button>
+        <p class="greeting">Hi ${booking.name},</p>
+        <p class="meeting-info">Please join the meeting via this link:</p>
+        <a href="https://meet.google.com/xxx-yyyy-zzz" class="meet-link" target="_blank">Google Meet Link</a>
+        <p class="time-info">at ${formatTime(booking.time_slot)}</p>
+        <button class="button button-danger" onclick="cancelBooking(${booking.id})">Cancel Meeting</button>
     `;
     return bookingElement;
 }
@@ -57,9 +62,9 @@ function createSlotElement(slot) {
     const slotElement = document.createElement('div');
     slotElement.className = 'slot';
     slotElement.innerHTML = `
-        <p>${formatTime(slot.time_slot)}</p>
-        <p>Available Slot: ${slot.available_slots}</p>
-        <button onclick="selectSlot(${slot.id})">Select</button>
+        <p class="time">${formatTime(slot.time_slot)}</p>
+        <p class="slots-available">${slot.available_slots} slots available</p>
+        <button class="button button-primary" onclick="selectSlot(${slot.id})">Select Slot</button>
     `;
     return slotElement;
 }
@@ -73,8 +78,12 @@ function formatTime(time) {
 
 function selectSlot(slotId) {
     selectedSlotId = slotId;
-    document.getElementById('booking-form').style.display = 'block';
+    document.getElementById('booking-form-overlay').style.display = 'block';
     clearForm();
+}
+
+function hideBookingForm() {
+    document.getElementById('booking-form-overlay').style.display = 'none';
 }
 
 function clearForm() {
@@ -87,7 +96,8 @@ async function bookSlot() {
     const email = document.getElementById('email').value;
 
     if (!name || !email) {
-        return alert('Please fill in all fields');
+        alert('Please fill in all fields');
+        return;
     }
 
     try {
@@ -129,7 +139,7 @@ async function postData(url, data) {
 
 async function refreshData() {
     await Promise.all([loadAllBookings(), loadSlots()]);
-    document.getElementById('booking-form').style.display = 'none';
+    hideBookingForm();
 }
 
 window.onload = refreshData;

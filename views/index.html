@@ -3,56 +3,233 @@
 <head>
     <title>Meeting Scheduler</title>
     <style>
-        .slot {
-            margin: 10px;
-            padding: 10px;
-            border: 1px solid #ccc;
-            background-color: #f9f9f9;
-        }
-        .booking-form {
-            display: none;
-            margin: 20px;
-            padding: 20px;
-            border: 1px solid #ddd;
-            background-color: #fff;
-        }
-        .booking-details {
-            margin: 20px;
-            padding: 20px;
-            border: 1px solid #ddd;
-            background-color: #e8f5e9;
-        }
-        #bookings-container {
-            margin-top: 20px;
-        }
-        input {
-            margin: 10px 0;
-            padding: 5px;
-            width: 200px;
-        }
-        button {
-            margin: 10px 0;
-            padding: 5px 10px;
-            background-color: #4CAF50;
-            color: white;
-            border: none;
-            cursor: pointer;
-        }
-        button:hover {
-            background-color: #45a049;
-        }
+        * {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    font-family: 'Segoe UI', system-ui, sans-serif;
+}
+
+body {
+    background-color: #f5f5f5;
+    color: #333;
+    line-height: 1.6;
+    padding: 2rem;
+}
+
+.container {
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+h1 {
+    color: #1a237e;
+    text-align: center;
+    margin-bottom: 2rem;
+    font-size: 2.5rem;
+}
+
+.grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 1.5rem;
+    margin: 2rem 0;
+}
+
+.slot {
+    background: white;
+    border-radius: 10px;
+    padding: 1.5rem;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    transition: transform 0.2s;
+}
+
+.slot:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+}
+
+.time {
+    font-size: 1.25rem;
+    color: #1a237e;
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+}
+
+.slots-available {
+    color: #666;
+    font-size: 0.9rem;
+    margin-bottom: 1rem;
+}
+
+.button {
+    width: 100%;
+    padding: 0.8rem;
+    border: none;
+    border-radius: 5px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background-color 0.2s;
+    margin-top: 0.5rem;
+}
+
+.button-primary {
+    background-color: #1a237e;
+    color: white;
+}
+
+.button-primary:hover {
+    background-color: #283593;
+}
+
+.button-secondary {
+    background-color: #eee;
+    color: #333;
+}
+
+.button-secondary:hover {
+    background-color: #e0e0e0;
+}
+
+.button-danger {
+    background-color: #d32f2f;
+    color: white;
+}
+
+.button-danger:hover {
+    background-color: #c62828;
+}
+
+.booking-form-overlay {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0,0,0,0.5);
+    z-index: 1000;
+}
+
+.booking-form {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: white;
+    padding: 2rem;
+    border-radius: 10px;
+    width: 90%;
+    max-width: 400px;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    z-index: 1001;
+}
+
+.booking-form h3 {
+    color: #1a237e;
+    margin-bottom: 1.5rem;
+    text-align: center;
+}
+
+.form-group {
+    margin-bottom: 1rem;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 0.5rem;
+    color: #666;
+}
+
+.form-group input {
+    width: 100%;
+    padding: 0.8rem;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    font-size: 1rem;
+}
+
+.form-group input:focus {
+    outline: none;
+    border-color: #1a237e;
+}
+
+.booking-details {
+    background: white;
+    border-radius: 10px;
+    padding: 1.5rem;
+    margin-bottom: 1rem;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    line-height: 1.8;
+}
+
+.booking-details .greeting {
+    font-size: 1.2rem;
+    color: #1a237e;
+    margin-bottom: 1rem;
+    font-weight: 500;
+}
+
+.booking-details .meeting-info {
+    margin-bottom: 0.5rem;
+}
+
+.booking-details .meet-link {
+    display: inline-block;
+    color: #1a237e;
+    text-decoration: none;
+    padding: 0.5rem 1rem;
+    background-color: #e8eaf6;
+    border-radius: 5px;
+    margin: 0.5rem 0;
+    font-weight: 500;
+}
+
+.booking-details .meet-link:hover {
+    background-color: #c5cae9;
+}
+
+.booking-details .time-info {
+    margin: 0.5rem 0 1rem 0;
+    color: #333;
+}
+
+.button-danger {
+    margin-top: 1rem;
+}
+
+.booking-details p {
+    margin-bottom: 0.5rem;
+}
+
+.section-title {
+    color: #1a237e;
+    margin: 2rem 0 1rem;
+    font-size: 1.5rem;
+}
     </style>
 </head>
 <body>
-    <h1>Meeting Scheduler</h1>
-    
-    <div id="slots-container"></div>
-    
-    <div id="booking-form" class="booking-form">
-        <h3>Book Slot</h3>
-        <input type="text" id="name" placeholder="Name" required><br>
-        <input type="email" id="email" placeholder="Email" required><br>
-        <button onclick="bookSlot()">Book</button>
+    <div class="container">
+        <h1>Meeting Scheduler</h1>
+        
+        <div id="slots-container"></div>
+        
+        <div class="booking-form-overlay" id="booking-form-overlay">
+            <div id="booking-form" class="booking-form">
+                <h3>Book Your Slot</h3>
+                <div class="form-group">
+                    <label for="name">Name</label>
+                    <input type="text" id="name" placeholder="Enter your name" required>
+                </div>
+                <div class="form-group">
+                    <label for="email">Email</label>
+                    <input type="email" id="email" placeholder="Enter your email" required>
+                </div>
+                <button class="button button-primary" onclick="bookSlot()">Confirm Booking</button>
+                <button class="button button-secondary" onclick="hideBookingForm()">Cancel</button>
+            </div>
+        </div>
     </div>
 
     <script src="/js/main.js"></script>
